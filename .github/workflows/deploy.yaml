@@ -1,0 +1,104 @@
+name: CI/CD Pipeline - Flask + React Full Stack
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+  AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # -------------------------
+    # 1️⃣ Checkout Code
+    # -------------------------
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # -------------------------
+    # 2️⃣ Login to Azure
+    # -------------------------
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # -------------------------
+    # 3️⃣ Login to ACR
+    # -------------------------
+    - name: Login to Azure Container Registry
+      run: az acr login --name ${{ env.ACR_NAME }}
+
+    # -------------------------
+    # 4️⃣ Build Docker Images
+    # -------------------------
+    - name: Build Docker Images (Frontend + Backend)
+      run: |
+        docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+        docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
+
+    # -------------------------
+    # 5️⃣ Security Scan with Trivy
+    # -------------------------
+    - name: Run Trivy Image Scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+
+    - name: Run Trivy Image Scan (Frontend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+
+    # -------------------------
+    # 6️⃣ Push Images to ACR
+    # -------------------------
+    - name: Push Docker Images to ACR
+      run: |
+        docker push ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        docker push ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+
+    # -------------------------
+    # 7️⃣ Connect to AKS
+    # -------------------------
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ env.AKS_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    # -------------------------
+    # 8️⃣ Blue-Green Deployment
+    # -------------------------
+    - name: Deploy to AKS (Blue-Green)
+      run: |
+        # Create temporary green deployments
+        kubectl apply -f k8s/backend-deploy-green.yaml
+        kubectl apply -f k8s/frontend-deploy-green.yaml
+
+        # Wait for rollout success
+        kubectl rollout status deployment/backend-green --timeout=120s || exit 1
+        kubectl rollout status deployment/frontend-green --timeout=120s || exit 1
+
+        # Switch service to green
+        kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
+        kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
+
+        # Cleanup old blue deployments
+        kubectl delete deployment backend-blue || true
+        kubectl delete deployment frontend-blue || true
+
+        echo "✅ Blue-Green deployment completed successfully."
