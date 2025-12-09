@@ -106,7 +106,7 @@ jobs:
         kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
 
         # Cleanup old blue deployments
-        #kubectl delete deployment backend-blue || true
-        #kubectl delete deployment frontend-blue || true
+        kubectl delete deployment backend-blue || true
+        kubectl delete deployment frontend-blue || true
 
 
