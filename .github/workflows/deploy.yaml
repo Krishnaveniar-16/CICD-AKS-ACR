@@ -110,3 +110,4 @@ jobs:
         #kubectl delete deployment frontend-blue || true
 
         #echo "✅ Blue-Green deployment completed successfully."
+
