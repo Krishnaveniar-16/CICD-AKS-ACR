@@ -37,26 +37,15 @@ jobs:
 
     # 4️ Build and Push Docker Images (Frontend + Backend)
     # -----------------------------------------------------
-    - name: Set up Docker Buildx
+    - name: Build Docker Images (Frontend + Backend)
       run: |
-        docker buildx create --use || true
-        docker buildx inspect --bootstrap
+       docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+       docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
 
-    - name: Build and Push Docker Images (Frontend + Backend)
+    - name: Push Docker Images (Frontend + Backend)
       run: |
-        docker buildx build \
-        --platform linux/arm64 \
-        -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest \
-        ./frontend \
-        --push
-
-        docker buildx build \
-        --platform linux/arm64 \
-        -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest \
-        ./backend \
-        --push
-
-
+        docker push ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        docker push ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
 
     # -------------------------
     # 5️ Security Scan with Trivy
