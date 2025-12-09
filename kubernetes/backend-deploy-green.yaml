@@ -1,24 +1,24 @@
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: backend-green
-#   labels:
-#     app: backend-green
-# spec:
-#   replicas: 1
-#   selector:
-#     matchLabels:
-#       app: backend-green
-#   template:
-#     metadata:
-#       labels:
-#         app: backend-green
-#     spec:
-#       containers:
-#       - name: flask-backend
-#         image: cicdregistrygh.azurecr.io/flask-backend:latest
-#         ports:
-#         - containerPort: 5000
-#         env:
-#         - name: DATABASE_URL
-#           value: "postgresql://<username>:<password>@<db-host>:5432/<dbname>"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-green
+  labels:
+    app: backend-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-green
+  template:
+    metadata:
+      labels:
+        app: backend-green
+    spec:
+      containers:
+      - name: flask-backend
+        image: cicdregistrygh.azurecr.io/flask-backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://<username>:<password>@<db-host>:5432/<dbname>"
