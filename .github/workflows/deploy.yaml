@@ -3,8 +3,7 @@ name: CI/CD Pipeline - Flask + React Full Stack
 on:
   push:
     branches:
-      - main
-      - dev
+     - dev1
 
 env:
   ACR_NAME: ${{ secrets.ACR_NAME }}
@@ -85,20 +84,25 @@ jobs:
     # -------------------------
     - name: Deploy to AKS (Blue-Green)
       run: |
+        kubectl apply -f k8s/backend-service.yaml
+        kubectl apply -f k8s/backend-deploy-blue.yaml
+        kubectl apply -f k8s/frontend-service.yaml
+        kubectl apply -f k8s/frontend-deploy-blue.yaml
+
         # Create temporary green deployments
-        kubectl apply -f k8s/backend-deploy-green.yaml
-        kubectl apply -f k8s/frontend-deploy-green.yaml
+        #kubectl apply -f k8s/backend-deploy-green.yaml
+        #kubectl apply -f k8s/frontend-deploy-green.yaml
 
         # Wait for rollout success
-        kubectl rollout status deployment/backend-green --timeout=120s || exit 1
-        kubectl rollout status deployment/frontend-green --timeout=120s || exit 1
+        #kubectl rollout status deployment/backend-green --timeout=120s || exit 1
+        #kubectl rollout status deployment/frontend-green --timeout=120s || exit 1
 
         # Switch service to green
-        kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
-        kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
+        #kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
+        #kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
 
         # Cleanup old blue deployments
-        kubectl delete deployment backend-blue || true
-        kubectl delete deployment frontend-blue || true
+        #kubectl delete deployment backend-blue || true
+        #kubectl delete deployment frontend-blue || true
 
-        echo "✅ Blue-Green deployment completed successfully."
+        #echo "✅ Blue-Green deployment completed successfully."

@@ -1,24 +1,24 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend-green
-  labels:
-    app: frontend-green
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: frontend-green
-  template:
-    metadata:
-      labels:
-        app: frontend-green
-    spec:
-      containers:
-      - name: react-frontend
-        image: cicdregistrygh.azurecr.io/react-frontend:latest
-        ports:
-        - containerPort: 80
-        env:
-        - name: REACT_APP_API_URL
-          value: "http://backend-service:5000"
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: frontend-green
+#   labels:
+#     app: frontend-green
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: frontend-green
+#   template:
+#     metadata:
+#       labels:
+#         app: frontend-green
+#     spec:
+#       containers:
+#       - name: react-frontend
+#         image: cicdregistrygh.azurecr.io/react-frontend:latest
+#         ports:
+#         - containerPort: 80
+#         env:
+#         - name: REACT_APP_API_URL
+#           value: "http://backend-service:5000"
