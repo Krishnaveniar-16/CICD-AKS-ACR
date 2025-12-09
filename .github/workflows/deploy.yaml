@@ -86,10 +86,10 @@ jobs:
     # -------------------------
     - name: Deploy to AKS (Blue-Green)
       run: |
-        kubectl apply -f k8s/backend-service.yaml
-        kubectl apply -f k8s/backend-deploy-blue.yaml
-        kubectl apply -f k8s/frontend-service.yaml
-        kubectl apply -f k8s/frontend-deploy-blue.yaml
+        kubectl apply -f kubernetes/backend-service.yaml
+        kubectl apply -f kubernetes/backend-deploy-blue.yaml
+        kubectl apply -f kubernetes/frontend-service.yaml
+        kubectl apply -f kubernetes/frontend-deploy-blue.yaml
 
         # Create temporary green deployments
         #kubectl apply -f k8s/backend-deploy-green.yaml
