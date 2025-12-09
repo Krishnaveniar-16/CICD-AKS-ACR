@@ -16,13 +16,13 @@ jobs:
 
     steps:
     # -------------------------
-    # 1️⃣ Checkout Code
+    # 1️ Checkout Code
     # -------------------------
     - name: Checkout repository
       uses: actions/checkout@v4
 
     # -------------------------
-    # 2️⃣ Login to Azure
+    # 2️ Login to Azure
     # -------------------------
     - name: Azure Login
       uses: azure/login@v2
@@ -30,22 +30,36 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     # -------------------------
-    # 3️⃣ Login to ACR
+    # 3️ Login to ACR
     # -------------------------
     - name: Login to Azure Container Registry
       run: az acr login --name ${{ env.ACR_NAME }}
 
-    # -------------------------
-    # 4️⃣ Build Docker Images
-    # -------------------------
-    - name: Build Docker Images (Frontend + Backend)
+    # 4️ Build and Push Docker Images (Frontend + Backend)
+    # -----------------------------------------------------
+    - name: Set up Docker Buildx
       run: |
-        docker buildx build --platform linux/arm64 -t cicdregistrygh.azurecr.io/react-frontend:latest ./frontend
-        docker buildx build --platform linux/arm64 -t cicdregistrygh.azurecr.io/flask-backend:latest ./backend
+        docker buildx create --use || true
+        docker buildx inspect --bootstrap
+
+    - name: Build and Push Docker Images (Frontend + Backend)
+      run: |
+        docker buildx build \
+        --platform linux/arm64 \
+        -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest \
+        ./frontend \
+        --push
+
+        docker buildx build \
+        --platform linux/arm64 \
+        -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest \
+        ./backend \
+        --push
+
 
 
     # -------------------------
-    # 5️⃣ Security Scan with Trivy
+    # 5️ Security Scan with Trivy
     # -------------------------
     - name: Run Trivy Image Scan (Backend)
       uses: aquasecurity/trivy-action@master
@@ -67,23 +81,17 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
 
-    # -------------------------
-    # 6️⃣ Push Images to ACR
-    # -------------------------
-    - name: Push Docker Images to ACR
-      run: |
-        docker push ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
-        docker push ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+
 
     # -------------------------
-    # 7️⃣ Connect to AKS
+    # 7 Connect to AKS
     # -------------------------
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ env.AKS_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
     # -------------------------
-    # 8️⃣ Blue-Green Deployment
+    # 8 Deployment
     # -------------------------
     - name: Deploy to AKS (Blue-Green)
       run: |
