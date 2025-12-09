@@ -40,13 +40,14 @@ jobs:
     # -------------------------
     - name: Build Docker Images (Frontend + Backend)
       run: |
-        docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
-        docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
+        docker buildx build --platform linux/arm64 -t cicdregistrygh.azurecr.io/react-frontend:latest ./frontend
+        docker buildx build --platform linux/arm64 -t cicdregistrygh.azurecr.io/flask-backend:latest ./backend
+
 
     # -------------------------
     # 5️⃣ Security Scan with Trivy
     # -------------------------
-    - name: Run Trivy Image Scan
+    - name: Run Trivy Image Scan (Backend)
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
