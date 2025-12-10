@@ -45,7 +45,7 @@ function App() {
 
   return (
     <div style={{ fontFamily: "monospace", padding: 20 }}>
-      <h2> Enter your data</h2>
+      <h2> Flask + React Full-Stack App</h2>
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
       <form onSubmit={addItem}>
         <input

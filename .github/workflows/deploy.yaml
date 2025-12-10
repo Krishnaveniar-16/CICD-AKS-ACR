@@ -5,6 +5,7 @@ on:
     branches:
      - dev1
 
+
 env:
   ACR_NAME: ${{ secrets.ACR_NAME }}
   AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
