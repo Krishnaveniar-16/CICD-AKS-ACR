@@ -39,7 +39,9 @@ jobs:
     # -----------------------------------------------------
     - name: Build Docker Images (Frontend + Backend)
       run: |
-       docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+       docker build \
+       --build-arg REACT_APP_API_URL=http://backend-service:5000 \
+       -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
        docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
 
     - name: Push Docker Images (Frontend + Backend)

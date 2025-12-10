@@ -21,4 +21,4 @@ spec:
         - containerPort: 5000
         env:
         - name: DATABASE_URL
-          value: "postgresql://<username>:<password>@<db-host>:5432/<dbname>"
+          value: "postgresql://dbadmin:Admin123@cicd-postgres.postgres.database.azure.com:5432/postgres?sslmode=require"

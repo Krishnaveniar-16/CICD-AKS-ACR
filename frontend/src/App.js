@@ -5,10 +5,12 @@ function App() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "";
 
   // Fetch all items from Flask API
   useEffect(() => {
-    fetch("${API_BASE_URL}/api/items")
+    fetch(`${API_BASE_URL}/api/items`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch items");
         return res.json();
@@ -28,7 +30,7 @@ function App() {
     e.preventDefault();
     if (!name.trim()) return;
     try {
-      const res = await fetch("${API_BASE_URL}/api/items", {
+      const res = await fetch(`${API_BASE_URL}/api/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
