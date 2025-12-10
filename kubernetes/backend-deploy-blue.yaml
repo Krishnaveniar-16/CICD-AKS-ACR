@@ -19,7 +19,7 @@ spec:
         image: cicdregistrygh.azurecr.io/flask-backend:latest
         ports:
         - containerPort: 5000
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://dbadmin:Admin2025@cicd-postgres.postgres.database.azure.com:5432/postgres?sslmode=require"
+        envFrom:
+         - secretRef:
+            name: db-credentials
 
