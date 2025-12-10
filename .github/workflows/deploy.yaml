@@ -39,9 +39,7 @@ jobs:
     # -----------------------------------------------------
     - name: Build Docker Images (Frontend + Backend)
       run: |
-       docker build \
-       --build-arg REACT_APP_API_URL=http://backend-service:5000 \
-       -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+       docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
        docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
 
     - name: Push Docker Images (Frontend + Backend)
@@ -91,8 +89,8 @@ jobs:
     - name: Deploy to AKS (Blue-Green)
       run: |
         kubectl apply -f kubernetes/backend-service.yaml
-        kubectl apply -f kubernetes/backend-deploy-blue.yaml
         kubectl apply -f kubernetes/frontend-service.yaml
+        kubectl apply -f kubernetes/backend-deploy-blue.yaml
         kubectl apply -f kubernetes/frontend-deploy-blue.yaml
 
         # Create temporary green deployments
@@ -108,7 +106,7 @@ jobs:
         kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
 
         # Cleanup old blue deployments
-        kubectl delete deployment backend-blue || true
-        kubectl delete deployment frontend-blue || true
+        #kubectl delete deployment backend-blue || true
+        #kubectl delete deployment frontend-blue || true
 
 
