@@ -3,7 +3,10 @@ name: CI/CD Pipeline - Flask + React Full Stack
 on:
   push:
     branches:
-     - dev1
+     - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
 
 
 env:
@@ -80,6 +83,17 @@ jobs:
         # Create temporary green deployments
         kubectl apply -f kubernetes/backend-deploy-green.yaml
         kubectl apply -f kubernetes/frontend-deploy-green.yaml
+
+
+        if ! kubectl rollout status deployment/backend-green --timeout=120s; then
+          kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-blue"}}}'
+         exit 1
+        fi
+
+        if ! kubectl rollout status deployment/frontend-green --timeout=120s; then
+         kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-blue"}}}'
+         exit 1
+        fi
 
         # Wait for rollout success
         kubectl rollout status deployment/backend-green --timeout=120s || exit 1
