@@ -1,0 +1,111 @@
+name: CI/CD Pipeline - Flask + React Full Stack
+
+on:
+  push:
+    branches:
+     - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+  AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+  
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+  
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+ 
+    - name: Login to Azure Container Registry
+      run: az acr login --name ${{ env.ACR_NAME }}
+
+  
+    - name: Build Docker Images (Frontend + Backend)
+      run: |
+       docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+       docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
+
+    - name: Push Docker Images (Frontend + Backend)
+      run: |
+        docker push ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        docker push ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+
+
+    - name: Run Trivy Image Scan (Backend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+      env:
+        TRIVY_PLATFORM: linux/arm64
+
+    - name: Run Trivy Image Scan (Frontend)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL'
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+      env:
+       TRIVY_PLATFORM: linux/arm64
+
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ env.AKS_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+
+    - name: Deploy to AKS (Blue-Green)
+      run: |
+        kubectl apply -f kubernetes/backend-service.yaml
+        kubectl apply -f kubernetes/frontend-service.yaml
+        kubectl apply -f kubernetes/backend-deploy-blue.yaml
+        kubectl apply -f kubernetes/frontend-deploy-blue.yaml
+
+        # Create temporary green deployments
+        kubectl apply -f kubernetes/backend-deploy-green.yaml
+        kubectl apply -f kubernetes/frontend-deploy-green.yaml
+
+
+        if ! kubectl rollout status deployment/backend-green --timeout=120s; then
+          kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-blue"}}}'
+         exit 1
+        fi
+
+        if ! kubectl rollout status deployment/frontend-green --timeout=120s; then
+         kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-blue"}}}'
+         exit 1
+        fi
+
+        # Wait for rollout success
+        kubectl rollout status deployment/backend-green --timeout=120s || exit 1
+        kubectl rollout status deployment/frontend-green --timeout=120s || exit 1
+
+        # Switch service to green
+        kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
+        kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
+
+        # Cleanup old blue deployments
+        kubectl delete deployment backend-blue || true
+        kubectl delete deployment frontend-blue || true
+
+
+

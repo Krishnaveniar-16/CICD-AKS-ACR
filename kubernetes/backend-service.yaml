@@ -4,7 +4,7 @@ metadata:
   name: backend-service
 spec:
   selector:
-    app: backend-blue   # Will switch to backend-green during rollout
+    app: backend-blue   
   ports:
     - protocol: TCP
       port: 5000

@@ -4,7 +4,7 @@ metadata:
   name: frontend-service
 spec:
   selector:
-    app: frontend-blue   # will switch to frontend-green on rollout
+    app: frontend-blue   
   ports:
     - protocol: TCP
       port: 80

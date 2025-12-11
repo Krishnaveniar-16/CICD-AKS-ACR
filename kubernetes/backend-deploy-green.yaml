@@ -16,9 +16,10 @@ spec:
     spec:
       containers:
       - name: flask-backend
-        image: <your-acr-name>.azurecr.io/flask-backend:latest
+        image: cicdregistrygh.azurecr.io/flask-backend:latest
         ports:
         - containerPort: 5000
-        env:
-        - name: DATABASE_URL
-          value: "postgresql://<username>:<password>@<db-host>:5432/<dbname>"
+        envFrom:
+         - secretRef:
+            name: db-credentials
+
