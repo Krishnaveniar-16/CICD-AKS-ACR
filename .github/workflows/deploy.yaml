@@ -93,11 +93,9 @@ jobs:
       run: |
           sleep 25
           if curl -f --max-time 5 http://backend-service/api/items; then
-            # Switch services to green
             kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
             kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
           else 
-            # Rollback to blue
             kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-blue"}}}'
             kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-blue"}}}'
           fi
