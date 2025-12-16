@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-  
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -54,8 +53,6 @@ jobs:
         severity: 'CRITICAL'
         ignore-unfixed: true
         vuln-type: 'os,library'
-      env:
-        TRIVY_PLATFORM: linux/arm64
 
     - name: Run Trivy Image Scan (Frontend)
       uses: aquasecurity/trivy-action@master
@@ -66,8 +63,6 @@ jobs:
         severity: 'CRITICAL'
         ignore-unfixed: true
         vuln-type: 'os,library'
-      env:
-       TRIVY_PLATFORM: linux/arm64
 
     - name: Get AKS Credentials
       run: |
