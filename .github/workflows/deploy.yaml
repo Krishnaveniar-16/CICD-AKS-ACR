@@ -8,12 +8,6 @@ on:
       - 'frontend/**'
       - 'backend/**'
 
-
-env:
-  ACR_NAME: ${{ secrets.ACR_NAME }}
-  AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
-  AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
-
 jobs:
   build-push-deploy:
     runs-on: ubuntu-latest
@@ -30,24 +24,24 @@ jobs:
 
  
     - name: Login to Azure Container Registry
-      run: az acr login --name ${{ env.ACR_NAME }}
+      run: az acr login --name ${{ secrets.ACR_NAME }}
 
   
     - name: Build Docker Images (Frontend + Backend)
       run: |
-       docker build -t ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
-       docker build -t ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
+       docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/react-frontend:latest ./frontend
+       docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/flask-backend:latest ./backend
 
     - name: Push Docker Images (Frontend + Backend)
       run: |
-        docker push ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
-        docker push ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+        docker push ${{ secrets.ACR_NAME }}.azurecr.io/react-frontend:latest
+        docker push ${{ secrets.ACR_NAME }}.azurecr.io/flask-backend:latest
 
 
     - name: Run Trivy Image Scan (Backend)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ env.ACR_NAME }}.azurecr.io/flask-backend:latest
+        image-ref: ${{ secrets.ACR_NAME }}.azurecr.io/flask-backend:latest
         format: 'table'
         exit-code: '1'
         severity: 'CRITICAL'
@@ -57,7 +51,7 @@ jobs:
     - name: Run Trivy Image Scan (Frontend)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ env.ACR_NAME }}.azurecr.io/react-frontend:latest
+        image-ref: ${{ secrets.ACR_NAME }}.azurecr.io/react-frontend:latest
         format: 'table'
         exit-code: '1'
         severity: 'CRITICAL'
@@ -66,7 +60,7 @@ jobs:
 
     - name: Get AKS Credentials
       run: |
-        az aks get-credentials --resource-group ${{ env.AKS_RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+        az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
 
     - name: Deploy to AKS (Blue-Green)
       run: |
