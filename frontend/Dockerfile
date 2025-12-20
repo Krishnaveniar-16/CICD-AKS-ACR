@@ -1,8 +1,12 @@
-# ---- Build Stage ----
-FROM node:18-alpine AS build
+FROM node:18-alpine
+
+RUN apk add --no-cache nginx
+
 WORKDIR /app
-COPY package*.json ./
+
+COPY package.json package-lock.json ./
 RUN npm install
+
 COPY . .
 
 ARG REACT_APP_API_URL
@@ -10,14 +14,10 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 RUN npm run build
 
-# ---- Run Stage ----
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
+RUN rm -rf /usr/share/nginx/html/* \
+    && cp -r build/* /usr/share/nginx/html/
 
-# Expose default Nginx port
-EXPOSE 80
-
-# Optional: Overwrite default Nginx config for React routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
