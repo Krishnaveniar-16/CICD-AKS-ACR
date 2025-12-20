@@ -22,4 +22,10 @@ spec:
         envFrom:
          - secretRef:
             name: db-credentials
+        readinessProbe:
+         httpGet:
+            path: /api/items
+            port: 5000
+         initialDelaySeconds: 10
+         periodSeconds: 5
 

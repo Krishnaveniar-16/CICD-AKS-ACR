@@ -73,21 +73,17 @@ jobs:
         kubectl apply -f kubernetes/backend-deploy-green.yaml
         kubectl apply -f kubernetes/frontend-deploy-green.yaml
 
-
-        kubectl rollout status deployment/backend-green --timeout=120s || exit 1
-        kubectl rollout status deployment/frontend-green --timeout=120s || exit 1
-
       
     - name: test and rollback 
       run: |
-          if curl -f --max-time 5 http://backend-service/api/items; then
-            kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-green"}}}'
-            kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-green"}}}'
-          else 
-            kubectl patch service backend-service -p '{"spec": {"selector": {"app": "backend-blue"}}}'
-            kubectl patch service frontend-service -p '{"spec": {"selector": {"app": "frontend-blue"}}}'
+          if kubectl wait --for=condition=ready pod -l app=backend-green --timeout=60s; then
+           kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-green"}}}'
+           kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-green"}}}'
+          else
+           kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-blue"}}}'
+           kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-blue"}}}'
           fi
-
+          
         # Cleanup old blue deployments
         #kubectl delete deployment backend-blue || true
         #kubectl delete deployment frontend-blue || true
