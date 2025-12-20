@@ -37,7 +37,6 @@ jobs:
         docker push ${{ secrets.ACR_NAME }}.azurecr.io/react-frontend:latest
         docker push ${{ secrets.ACR_NAME }}.azurecr.io/flask-backend:latest
 
-
     - name: Run Trivy Image Scan (Backend)
       uses: aquasecurity/trivy-action@master
       with:
@@ -69,7 +68,6 @@ jobs:
         kubectl apply -f kubernetes/backend-deploy-blue.yaml
         kubectl apply -f kubernetes/frontend-deploy-blue.yaml
 
-        # Create temporary green deployments
         kubectl apply -f kubernetes/backend-deploy-green.yaml
         kubectl apply -f kubernetes/frontend-deploy-green.yaml
 
