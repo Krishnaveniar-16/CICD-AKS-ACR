@@ -1,12 +1,8 @@
-FROM node:18-alpine
 
-RUN apk add --no-cache nginx
-
+FROM node:18-alpine AS build
 WORKDIR /app
-
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
-
 COPY . .
 
 ARG REACT_APP_API_URL
@@ -14,10 +10,14 @@ ENV REACT_APP_API_URL=$REACT_APP_API_URL
 
 RUN npm run build
 
-RUN rm -rf /usr/share/nginx/html/* \
-    && cp -r build/* /usr/share/nginx/html/
+
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
+
