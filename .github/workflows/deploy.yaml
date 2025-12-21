@@ -74,13 +74,14 @@ jobs:
       
     - name: test and rollback 
       run: |
-          if kubectl wait --for=condition=ready pod -l app=backend-green --timeout=60s; then
-           kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-green"}}}'
-           kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-green"}}}'
+          if kubectl rollout status deployment/backend-green --timeout=60s; then
+            kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-green"}}}'
+            kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-green"}}}'
           else
-           kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-blue"}}}'
-           kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-blue"}}}'
+            kubectl patch service backend-service -p '{"spec":{"selector":{"app":"backend-blue"}}}'
+            kubectl patch service frontend-service -p '{"spec":{"selector":{"app":"frontend-blue"}}}'
           fi
+
           
         # Cleanup old blue deployments
         #kubectl delete deployment backend-blue || true

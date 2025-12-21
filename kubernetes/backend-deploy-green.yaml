@@ -22,5 +22,8 @@ spec:
         envFrom:
          - secretRef:
             name: db-credentials
-
-
+        readinessProbe:
+         tcpSocket:
+            port: 5000
+         initialDelaySeconds: 10
+         periodSeconds: 5
