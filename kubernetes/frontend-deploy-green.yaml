@@ -22,3 +22,9 @@ spec:
         env:
         - name: REACT_APP_API_URL
           value: "http://backend-service:5000"
+        readinessProbe:
+         tcpSocket:
+          port: 80
+         initialDelaySeconds: 5
+         periodSeconds: 5
+
